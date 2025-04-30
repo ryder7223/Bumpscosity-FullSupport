@@ -100,10 +100,12 @@ class $modify(CustomSecretLayer2, SecretLayer2) {
         return true;
     }
 
+    #ifndef GEODE_IS_IOS
     gd::string getBasicMessage() {
         if (rand() % 15 == 0) return getBumpscosityMessage();
         else return SecretLayer2::getBasicMessage();
     }
+    #endif
 
     gd::string getBumpscosityMessage() {
         float currentVal = Mod::get()->getSavedValue<float>("bumpscosity", 0);
