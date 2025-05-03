@@ -92,10 +92,8 @@ class $modify(CustomSecretLayer2, SecretLayer2) {
     bool init() {
         SecretLayer2::init();
 
-        #ifndef GEODE_IS_MACOS
         if (rand() % 4 == 0)
             updateMessageLabel(getBumpscosityMessage());
-        #endif
 	
         return true;
     }
