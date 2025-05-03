@@ -1,7 +1,6 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/MoreOptionsLayer.hpp>
 #include <Geode/modify/SecretLayer2.hpp>
-#include <algorithm> // for std::clamp
 
 using namespace geode::prelude;
 
@@ -26,86 +25,89 @@ std::string bumpMessages[15] = {
 };
 
 int getBumpscosityIndex(float percentage) {
-    if (percentage <= 0) return 0;
-    else if (percentage >= 1) return (bumpOptions - 1);
-    else return roundf(1 + ((bumpOptions - 3) * percentage));
+	if (percentage <= 0) return 0;
+	else if (percentage >= 1) return (bumpOptions - 1);
+	else return roundf(1 + ((bumpOptions - 3) * percentage));
 }
 
 class $modify(CustomMoreOptionsLayer, MoreOptionsLayer) {
-    struct Fields {
-        Slider* bumpSlider;
-        CCLabelBMFont* bumpText;
-    };
+	struct Fields {
+		Slider* bumpSlider;
+		CCLabelBMFont* bumpText;
+	};
 
-    bool init() {
-        MoreOptionsLayer::init();
+	bool init() {
+		MoreOptionsLayer::init();
 
-        int settingsPage = 3;
+		int settingsPage = 3;
 
-        #if defined(GEODE_IS_ANDROID)
-            settingsPage = 3;
-        #endif
+		#if defined(GEODE_IS_ANDROID)
+			settingsPage = 3;
+		#endif
 
-        CCLayer* mainLayer = MoreOptionsLayer::m_mainLayer;
+		CCLayer* mainLayer = MoreOptionsLayer::m_mainLayer;
         CCLayer* settingsLayer = as<CCLayer*>(mainLayer->getChildren()->objectAtIndex(settingsPage));
 
-        auto winSize = CCDirector::sharedDirector()->getWinSize();
-        float currentVal = Mod::get()->getSavedValue<float>("bumpscosity", 0);
+		auto winSize = CCDirector::sharedDirector()->getWinSize();
+		float currentVal = Mod::get()->getSavedValue<float>("bumpscosity", 0);
 
-        auto label = CCLabelBMFont::create("", "bigFont.fnt");
-        float center = winSize.width / 2;
-        float vCenter = winSize.height / 2;
+		auto label = CCLabelBMFont::create("", "bigFont.fnt");
+		auto center = (winSize.width / 2);
+		auto vCenter = (winSize.height / 2);
+		
+		int yOffset = 95;
+		int ySpacing = 22;
 
-        int yOffset = 95;
-        int ySpacing = 22;
+		label->setPosition({ center, vCenter - yOffset });
+		label->setScale(0.5f);
+		settingsLayer->addChild(label);
 
-        label->setPosition({ center, vCenter - yOffset });
-        label->setScale(0.5f);
-        settingsLayer->addChild(label);
+		auto slider = Slider::create(this, menu_selector(CustomMoreOptionsLayer::onBumpscosityChange), 0.8f);
+		slider->setPosition({ center, vCenter - yOffset - ySpacing });
+		slider->setValue(clampf(currentVal, 0, 1));
+		settingsLayer->addChild(slider);
 
-        auto slider = Slider::create(this, menu_selector(CustomMoreOptionsLayer::onBumpscosityChange), 0.8f);
-        slider->setPosition({ center, vCenter - yOffset - ySpacing });
-        slider->setValue(std::clamp(currentVal, 0.0f, 1.0f));
-        settingsLayer->addChild(slider);
+		m_fields->bumpSlider = slider;
+		m_fields->bumpText = label;
+		setBumpscosityLabel(currentVal);
 
-        m_fields->bumpSlider = slider;
-        m_fields->bumpText = label;
-        setBumpscosityLabel(currentVal);
+		return true;
+	}
 
-        return true;
-    }
+	void onBumpscosityChange(CCObject* sender) {
+		float bumpVal = m_fields->bumpSlider->getThumb()->getValue();
 
-    void onBumpscosityChange(CCObject* sender) {
-        float bumpVal = m_fields->bumpSlider->getThumb()->getValue();
+		Mod::get()->setSavedValue<float>("bumpscosity", clampf(bumpVal, 0, 1));
+		setBumpscosityLabel(bumpVal);
 
-        Mod::get()->setSavedValue<float>("bumpscosity", std::clamp(bumpVal, 0.0f, 1.0f));
-        setBumpscosityLabel(bumpVal);
-    }
+		return;
+	}
 
-    void setBumpscosityLabel(float percentage) {
-        int bumpIndex = getBumpscosityIndex(percentage);
-        m_fields->bumpText->setString(("Bumpscosity: " + std::to_string(bumpValues[bumpIndex])).c_str());
-    }
+	void setBumpscosityLabel(float percentage) {
+		int bumpIndex = getBumpscosityIndex(percentage);
+
+		m_fields->bumpText->setString(("Bumpscosity: " + std::to_string(bumpValues[bumpIndex])).c_str());
+	}
 };
 
+
 class $modify(CustomSecretLayer2, SecretLayer2) {
-    bool init() {
-        SecretLayer2::init();
 
-        if (rand() % 4 == 0)
-            updateMessageLabel(getBumpscosityMessage());
-	
-        return true;
-    }
+	bool init() {
+		SecretLayer2::init();
+		if (rand() % 4 == 0) updateMessageLabel(getBumpscosityMessage());
+		return true;
+	}
 
-    gd::string getBasicMessage() {
-        if (rand() % 15 == 0) return getBumpscosityMessage();
-        else return SecretLayer2::getBasicMessage();
-    }
+	gd::string getBasicMessage() {
+		if (rand() % 15 == 0) return getBumpscosityMessage();
+		else return SecretLayer2::getBasicMessage();
+	}
 
-    gd::string getBumpscosityMessage() {
-        float currentVal = Mod::get()->getSavedValue<float>("bumpscosity", 0);
-        int bumpIndex = getBumpscosityIndex(currentVal);
-        return bumpMessages[bumpIndex];
-    }
+	gd::string getBumpscosityMessage() {
+		float currentVal = Mod::get()->getSavedValue<float>("bumpscosity", 0);
+		int bumpIndex = getBumpscosityIndex(currentVal);
+		return bumpMessages[bumpIndex];
+	}
+
 };
