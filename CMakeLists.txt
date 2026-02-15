@@ -8,7 +8,7 @@ else()
 endif()
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-project(Bumpscosity VERSION 1.0.2)
+project(Bumpscosity VERSION 1.0.6)
 
 add_library(${PROJECT_NAME} SHARED
     src/main.cpp
